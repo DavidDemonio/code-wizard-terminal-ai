@@ -1,73 +1,126 @@
-# Welcome to your Lovable project
 
-## Project info
+# CodeWizard Terminal AI
 
-**URL**: https://lovable.dev/projects/31f4b220-365c-459b-a949-ae181e67ba82
+An AI-powered terminal and SFTP client with Ollama integration, providing contextual assistance for developers working with remote servers.
 
-## How can I edit this code?
+![CodeWizard Terminal AI](https://lovable.dev/opengraph-image-p98pqg.png)
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **AI Agent**: Integrated with Ollama's local API for contextual assistance
+  - Activated with `Ctrl+I` hotkey
+  - Command detection and execution
+  - Multi-step reasoning
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/31f4b220-365c-459b-a949-ae181e67ba82) and start prompting.
+- **SSH & SFTP Client**:
+  - In-browser SSH terminal (xterm.js)
+  - SFTP file browser with uploads/downloads
 
-Changes made via Lovable will be committed automatically to this repo.
+- **User & Admin System**:
+  - Registration & login (MySQL + JWT)
+  - Email notifications (ZohoMail SMTP)
+  - Configuration management
 
-**Use your preferred IDE**
+## Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui components
+- **Backend**: Node.js (or your preferred backend)
+- **Database**: MySQL
+- **AI**: Ollama API
+- **Terminal**: xterm.js
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Installation
 
-Follow these steps:
+### Method 1: Using the Installation Script
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/codewizard-terminal-ai.git
+   cd codewizard-terminal-ai
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Run the installation script:
+   ```bash
+   chmod +x install.sh
+   ./install.sh
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Follow the prompts to configure your database, SMTP, Ollama settings, and admin user.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+4. Start the application:
+   ```bash
+   npm run start
+   ```
 
-**Edit a file directly in GitHub**
+### Method 2: Manual Installation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/codewizard-terminal-ai.git
+   cd codewizard-terminal-ai
+   ```
 
-**Use GitHub Codespaces**
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. Create a `.env` file in the root directory:
+   ```
+   # Server configuration
+   PORT=3000
 
-## What technologies are used for this project?
+   # Database
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=codewizard
+   DB_USER=your_db_user
+   DB_PASSWORD=your_db_password
 
-This project is built with:
+   # SMTP
+   SMTP_HOST=smtp.zoho.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@example.com
+   SMTP_PASSWORD=your_smtp_password
+   SMTP_FROM=CodeWizard <your_email@example.com>
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+   # Ollama
+   OLLAMA_API=http://localhost:11434
+   OLLAMA_MODEL=llama2
 
-## How can I deploy this project?
+   # JWT Secret
+   JWT_SECRET=your_random_secret_here
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/31f4b220-365c-459b-a949-ae181e67ba82) and click on Share -> Publish.
+4. Build the application:
+   ```bash
+   npm run build
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+5. Start the application:
+   ```bash
+   npm run start
+   ```
 
-Yes, you can!
+## First-Time Setup
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+On first run, the application will:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Redirect to `/setup`
+2. Guide you through configuring MySQL, SMTP, and Ollama
+3. Create necessary database tables
+4. Set up an initial admin user
+5. Redirect to the login page
+
+## Development
+
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+2. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## License
+
+[MIT](LICENSE)
