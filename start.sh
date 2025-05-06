@@ -33,5 +33,6 @@ echo -e "${GREEN}Using port $PORT${NC}"
 export PORT=$PORT
 
 # Start the application with the determined port
+# Use --host 0.0.0.0 to make it accessible from outside localhost
 echo -e "${BLUE}Starting application on port $PORT...${NC}"
-npx vite --port $PORT
+npx vite --port $PORT --host 0.0.0.0
