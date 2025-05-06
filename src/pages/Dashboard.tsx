@@ -15,7 +15,7 @@ import {
   X,
   Maximize2,
   Minimize2,
-  LayoutSplit,
+  LayoutPanelLeft,
   MessageSquare,
   MessageSquareOff,
 } from "lucide-react";
@@ -120,7 +120,7 @@ export default function Dashboard() {
                   className="gap-1"
                   onClick={() => setLayoutSplit(!layoutSplit)}
                 >
-                  <LayoutSplit className="h-4 w-4" />
+                  <LayoutPanelLeft className="h-4 w-4" />
                   {layoutSplit ? "Stack" : "Split"}
                 </Button>
                 

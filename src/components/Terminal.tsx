@@ -26,7 +26,6 @@ export function Terminal({ isConnected = false, serverMessage = "Not connected" 
           background: '#1E1E1E',
           foreground: '#E0E0E0',
           cursor: '#FFFFFF',
-          selection: 'rgba(255, 255, 255, 0.3)',
         },
         convertEol: true,
       });

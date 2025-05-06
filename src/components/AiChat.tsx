@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bot, Send, Zap, Terminal as TerminalIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sendChatCompletion, isShellCommand } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
 }
@@ -23,7 +25,9 @@ export function AiChat() {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [model, setModel] = useState("llama2"); // Default model
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -49,18 +53,50 @@ export function AiChat() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response (In production, you would call your Ollama API here)
-    setTimeout(() => {
+    try {
+      // Check if input is a shell command
+      const isCommand = isShellCommand(input);
       let responseContent = "";
-      
-      // Simulate detecting if input is a shell command
-      if (input.startsWith("ls") || 
-          input.startsWith("cd") || 
-          input.startsWith("git") || 
-          input.startsWith("npm")) {
+
+      if (isCommand) {
         responseContent = `I detected that you're trying to run the command: \`${input}\`\n\nWould you like me to run this command for you?`;
       } else {
-        responseContent = "I understand you're asking about " + input + ". Here's what I can tell you...";
+        // Connect to real Ollama API
+        const messagesForAPI = messages
+          .filter(msg => msg.id !== "welcome") // Filter out the welcome message
+          .map(({ role, content }) => ({ role, content }));
+        
+        // Add the new user message
+        messagesForAPI.push({
+          role: "user",
+          content: input
+        });
+        
+        // Add a system message to provide context
+        if (messagesForAPI.length === 1) {
+          messagesForAPI.unshift({
+            role: "system",
+            content: "You are an AI assistant for a terminal application. You can help with coding questions, terminal commands, and general assistance. Be concise and helpful."
+          });
+        }
+
+        try {
+          const response = await sendChatCompletion(messagesForAPI, model);
+          if (response && response.message && response.message.content) {
+            responseContent = response.message.content;
+          } else {
+            throw new Error("Invalid response format from Ollama");
+          }
+        } catch (error) {
+          console.error("Error from Ollama API:", error);
+          responseContent = "Sorry, I encountered an error while processing your request. Please check your Ollama configuration and ensure the service is running.";
+          
+          toast({
+            title: "Connection Error",
+            description: "Failed to connect to Ollama API. Please check your configuration.",
+            variant: "destructive",
+          });
+        }
       }
       
       const assistantMessage = {
@@ -71,8 +107,17 @@ export function AiChat() {
       };
       
       setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error processing message:", error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to process your message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -148,6 +193,7 @@ export function AiChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={isLoading}
           />
           <Button size="icon" className="rounded-full" onClick={handleSend} disabled={isLoading}>
             <Send className="h-4 w-4" />
