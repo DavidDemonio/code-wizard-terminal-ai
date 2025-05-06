@@ -28,6 +28,33 @@ echo -e "${YELLOW}Checking required dependencies...${NC}"
 check_command "node"
 check_command "npm"
 
+# Function to test MySQL connection
+test_mysql_connection() {
+  local host=$1
+  local port=$2
+  local database=$3
+  local user=$4
+  local password=$5
+  
+  echo -e "${YELLOW}Testing MySQL connection...${NC}"
+  
+  # Try to connect to MySQL
+  if command -v mysql &> /dev/null; then
+    if mysql -h "$host" -P "$port" -u "$user" -p"$password" -e "USE $database" 2>/dev/null; then
+      echo -e "${GREEN}MySQL connection successful!${NC}"
+      return 0
+    else
+      echo -e "${RED}Failed to connect to MySQL database.${NC}"
+      echo "Please check your credentials and make sure the database exists."
+      return 1
+    fi
+  else
+    echo -e "${YELLOW}MySQL client not installed. Skipping direct connection test.${NC}"
+    echo "We'll continue with the installation, but you may need to verify your database connection later."
+    return 0
+  fi
+}
+
 # Prompt for MySQL configuration
 echo -e "\n${YELLOW}MySQL Database Configuration${NC}"
 read -p "Host (default: localhost): " DB_HOST
@@ -55,6 +82,15 @@ while [[ -z "$DB_PASSWORD" ]]; do
   read -s -p "Password: " DB_PASSWORD
   echo
 done
+
+# Test MySQL connection
+if ! test_mysql_connection "$DB_HOST" "$DB_PORT" "$DB_NAME" "$DB_USER" "$DB_PASSWORD"; then
+  read -p "Continue with installation anyway? (y/n): " CONTINUE
+  if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
+    echo -e "${RED}Installation aborted.${NC}"
+    exit 1
+  fi
+fi
 
 # Prompt for SMTP configuration
 echo -e "\n${YELLOW}SMTP Configuration${NC}"
@@ -94,6 +130,19 @@ OLLAMA_API=${OLLAMA_API:-http://localhost:11434}
 
 read -p "Default Model (default: llama2): " OLLAMA_MODEL
 OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
+
+# Test Ollama connection
+echo -e "${YELLOW}Testing Ollama connection...${NC}"
+if curl -s "$OLLAMA_API/api/version" > /dev/null; then
+  echo -e "${GREEN}Ollama connection successful!${NC}"
+else
+  echo -e "${RED}Failed to connect to Ollama.${NC}"
+  read -p "Continue with installation anyway? (y/n): " CONTINUE
+  if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
+    echo -e "${RED}Installation aborted.${NC}"
+    exit 1
+  fi
+fi
 
 # Admin user setup
 echo -e "\n${YELLOW}Admin User Setup${NC}"
@@ -161,6 +210,24 @@ echo -e "${GREEN}Creating database tables...${NC}"
 echo -e "${GREEN}Creating admin user...${NC}"
 echo "Admin user will be created on first application start."
 
+# Make the start script executable
+echo -e "\n${YELLOW}Creating startup script...${NC}"
+echo '#!/bin/bash
+
+# Find an available port starting from the one specified in .env
+PORT=$(grep PORT= .env | cut -d= -f2)
+while lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null; do
+  echo "Port $PORT is in use, trying next port..."
+  PORT=$((PORT+1))
+done
+
+echo "Starting server on port $PORT"
+export PORT
+npx vite --port $PORT
+' > start.sh
+
+chmod +x start.sh
+
 echo -e "\n${GREEN}Installation completed successfully!${NC}"
-echo -e "You can start the server with: ${BLUE}npm run start${NC}"
-echo -e "The application will be available at: ${BLUE}http://localhost:${SERVER_PORT}${NC}"
+echo -e "You can start the server with: ${BLUE}./start.sh${NC}"
+echo -e "The application will be available at: ${BLUE}http://localhost:${SERVER_PORT} (or the next available port)${NC}"

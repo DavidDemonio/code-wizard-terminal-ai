@@ -32,12 +32,11 @@ interface OllamaConfig {
 }
 
 /**
- * Test MySQL connection
+ * Test MySQL connection with real connection attempt
  */
 export const testMySQLConnection = async (config: MySQLConfig): Promise<boolean> => {
-  // In production app, this would make a real backend API call to test the connection
   try {
-    // Simulate API call to test MySQL connection
+    // Real MySQL connection test
     const response = await fetch('/api/test/mysql', {
       method: 'POST',
       headers: {
@@ -46,12 +45,15 @@ export const testMySQLConnection = async (config: MySQLConfig): Promise<boolean>
       body: JSON.stringify(config),
     });
     
-    return response.ok;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to connect to MySQL');
+    }
+    
+    return true;
   } catch (error) {
     console.error('Failed to test MySQL connection:', error);
-    // In a real app, we would return the actual connection status
-    // For now, we'll simulate success to allow setup to continue
-    return true;
+    return false;
   }
 };
 
@@ -59,9 +61,8 @@ export const testMySQLConnection = async (config: MySQLConfig): Promise<boolean>
  * Test SMTP connection
  */
 export const testSMTPConnection = async (config: SMTPConfig): Promise<boolean> => {
-  // In production app, this would make a real backend API call to test the connection
   try {
-    // Simulate API call to test SMTP connection
+    // Real SMTP connection test
     const response = await fetch('/api/test/smtp', {
       method: 'POST',
       headers: {
@@ -70,12 +71,15 @@ export const testSMTPConnection = async (config: SMTPConfig): Promise<boolean> =
       body: JSON.stringify(config),
     });
     
-    return response.ok;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to connect to SMTP server');
+    }
+    
+    return true;
   } catch (error) {
     console.error('Failed to test SMTP connection:', error);
-    // In a real app, we would return the actual connection status
-    // For now, we'll simulate success to allow setup to continue
-    return true;
+    return false;
   }
 };
 
@@ -94,9 +98,8 @@ export const saveConfiguration = async (
   smtpConfig: SMTPConfig, 
   ollamaConfig: OllamaConfig
 ): Promise<boolean> => {
-  // In production app, this would make a real backend API call to save the configuration
   try {
-    // Simulate API call to save configuration
+    // Real API call to save configuration
     const response = await fetch('/api/config/save', {
       method: 'POST',
       headers: {
@@ -109,10 +112,45 @@ export const saveConfiguration = async (
       }),
     });
     
-    return response.ok;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to save configuration');
+    }
+    
+    // Store config in local storage for client-side use
+    localStorage.setItem('ollamaConfig', JSON.stringify(ollamaConfig));
+    
+    return true;
   } catch (error) {
     console.error('Failed to save configuration:', error);
-    // In a real app, we would return the actual status
-    return true;
+    return false;
+  }
+};
+
+/**
+ * Load Ollama configuration
+ */
+export const loadOllamaConfiguration = async (): Promise<OllamaConfig | null> => {
+  try {
+    // Try to get from local storage first (for faster UI)
+    const localConfig = localStorage.getItem('ollamaConfig');
+    if (localConfig) {
+      return JSON.parse(localConfig) as OllamaConfig;
+    }
+    
+    // If not in local storage, fetch from server
+    const response = await fetch('/api/config/ollama', {
+      method: 'GET',
+    });
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const config = await response.json();
+    return config;
+  } catch (error) {
+    console.error('Failed to load Ollama configuration:', error);
+    return null;
   }
 };
