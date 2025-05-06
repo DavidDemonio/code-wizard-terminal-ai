@@ -13,6 +13,13 @@ interface TerminalProps {
   serverMessage?: string;
 }
 
+type MessageRole = "system" | "user" | "assistant";
+
+interface Message {
+  role: MessageRole;
+  content: string;
+}
+
 export function Terminal({ isConnected = false, serverMessage = "Not connected" }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const [terminal, setTerminal] = useState<XTerm | null>(null);
@@ -46,7 +53,7 @@ export function Terminal({ isConnected = false, serverMessage = "Not connected" 
         // Call Ollama AI to process the shell command
         terminal.writeln(`Executing: ${command}`);
         
-        const messages = [
+        const messages: Message[] = [
           { role: "system", content: "You are a terminal assistant. Return only the expected output of the command. For commands that would require a real shell environment, explain what the command would do and what output it might produce." },
           { role: "user", content: `Process this shell command and return only the expected output: ${command}` }
         ];
@@ -74,7 +81,7 @@ export function Terminal({ isConnected = false, serverMessage = "Not connected" 
         // If not a shell command, treat it as a chat with AI
         terminal.writeln("Processing with AI...");
         
-        const messages = [
+        const messages: Message[] = [
           { role: "system", content: "You are a helpful AI terminal assistant. Keep responses concise and focused." },
           { role: "user", content: command }
         ];

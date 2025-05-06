@@ -29,6 +29,21 @@ export const getCommandCategory = (command: string): keyof typeof COMMAND_CATEGO
 };
 
 /**
+ * Check if the provided text is likely a shell command
+ */
+export const isShellCommand = (text: string): boolean => {
+  // Common command prefixes and patterns
+  const commandPatterns = [
+    /^(cd|ls|git|npm|yarn|pnpm|docker|kubectl|ssh|scp|cat|echo|mkdir|touch|rm|cp|mv|curl|wget|sudo|apt|yum|dnf|brew)/,
+    /^(python|node|bash|sh|zsh|fish|powershell|cmd|php|ruby|perl|java|go|rust|cargo)/,
+    /(\||>|<|>>|<<|&&|\|\|)/,
+    /^[\.\/]/
+  ];
+  
+  return commandPatterns.some(pattern => pattern.test(text.trim()));
+};
+
+/**
  * Parse command for potential dangerous operations
  */
 export const isRiskyCommand = (command: string): boolean => {
